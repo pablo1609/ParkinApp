@@ -6,6 +6,7 @@ using ParkinApp.Persistence.Repositories;
 using ParkinApp.Services;
 using FluentValidation.AspNetCore;
 using ParkinApp.Application.Services;
+using ParkinApp.Controllers;
 using ParkinApp.Domain.DTOs;
 using ParkinApp.Domain.Entities;
 using ParkinApp.Middlewares;
@@ -21,15 +22,15 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IHostedService, CleanupExpiredReservations>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IParkingSpotService, ParkingSpotService>();
 builder.Services.AddScoped<IParkingSpotCacheService, ParkingSpotCacheService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IValidator<LoginDto>, LoginDtoValidator>();
-builder.Services.AddScoped<IValidator<RegisterDto>, RegisterDtoValidator>();
-builder.Services.AddScoped<IValidator<ParkingSpot>, ParkingSpotValidator>();
-builder.Services.AddScoped<IValidator<CreateReservationDto>, CreateReservationDtoValidator>();
-builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateReservationDtoValidator>();
+
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(x =>
     ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")));
@@ -56,7 +57,6 @@ builder.Services.AddCors(options =>
 });
 
 // Redis configuration
-// Redis configuration
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
@@ -75,13 +75,15 @@ app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseWebSockets();
+
 app.UseRouting();
+
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseCors("AllowReactApp");
-
 
 app.MapControllers();
 
